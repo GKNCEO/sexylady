@@ -1,0 +1,11 @@
+{
+  "name": "For You",
+  "short_name": "For You",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1B0A16",
+  "theme_color": "#1B0A16",
+  "icons": [
+    { "src": "icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
