@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="theme-color" content="#1B0A16">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="For You">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
+<title>Love Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Karla:wght@400;600;700&family=Silkscreen&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💖</text></svg>">
+<style>
+:root{
+  --night:#1B0A16;
+  --plum:#2E1027;
+  --rose:#FF4D7E;
+  --gold:#F5C451;
+  --cream:#FFF0E9;
+  --mauve:#9C6F8C;
+  --ok:#6BE0A8;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:radial-gradient(120% 80% at 50% -10%, #46163A 0%, transparent 60%), var(--night);
+  color:var(--cream);
+  font-family:'Karla',system-ui,sans-serif;
+  min-height:100vh;
+  overscroll-behavior:none;
+}
+.wrap{max-width:560px;margin:0 auto;padding:18px 12px 40px}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px}
+.brand{font-family:'Silkscreen',monospace;font-size:11px;letter-spacing:.14em;color:var(--mauve)}
+.tokens{display:flex;gap:5px}
+.token{width:18px;height:18px;opacity:.22;filter:grayscale(1);transition:.35s}
+.token.on{opacity:1;filter:none;transform:scale(1.12)}
+
+.hero{padding:6px 2px 22px}
+.hero h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:clamp(38px,13vw,58px);line-height:.92;margin:0 0 10px;letter-spacing:-.03em}
+.hero h1 em{font-style:normal;color:var(--rose)}
+.hero p{margin:0;color:var(--mauve);font-size:15px;max-width:34ch}
+.counter{margin-top:16px;display:inline-flex;align-items:baseline;gap:8px;border:1px solid rgba(255,77,126,.35);border-radius:999px;padding:7px 14px;background:rgba(255,77,126,.08)}
+.counter b{font-family:'Silkscreen',monospace;font-size:14px;color:var(--gold)}
+.counter span{font-size:12px;color:var(--mauve);letter-spacing:.04em}
+
+.cards{display:flex;flex-direction:column;gap:12px;margin-top:24px}
+.card{display:flex;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;
+  background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+  border:1px solid rgba(255,240,233,.12);border-radius:18px;padding:14px 15px;
+  color:var(--cream);font:inherit;transition:transform .15s ease,border-color .2s}
+.card:active{transform:scale(.985)}
+.card:hover{border-color:rgba(255,77,126,.5)}
+.card .no{font-family:'Silkscreen',monospace;font-size:12px;color:var(--rose);width:22px;flex:0 0 auto}
+.card .txt{flex:1;min-width:0}
+.card .txt strong{display:block;font-family:'Bricolage Grotesque',sans-serif;font-size:18px;font-weight:700;letter-spacing:-.01em}
+.card .txt small{color:var(--mauve);font-size:12.5px}
+.card .mark{font-size:19px;opacity:.35}
+.card.done{border-color:rgba(107,224,168,.4)}
+.card.done .mark{opacity:1}
+
+.screen{display:none}
+.screen.live{display:block;animation:in .28s ease}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px}
+.back{background:none;border:1px solid rgba(255,240,233,.2);color:var(--cream);border-radius:999px;padding:7px 13px;font:inherit;font-size:13px;cursor:pointer}
+.back:active{background:rgba(255,255,255,.08)}
+.stat{font-family:'Silkscreen',monospace;font-size:12px;color:var(--gold)}
+h2.title{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:26px;margin:0 0 4px;letter-spacing:-.02em}
+p.sub{margin:0 0 16px;color:var(--mauve);font-size:14px}
+
+/* ---- word search: massive, scrollable, readable ---- */
+#gridWrap{overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid rgba(255,240,233,.12);
+  border-radius:14px;padding:8px;max-height:66vh;margin-bottom:34px;background:rgba(0,0,0,.18)}
+#grid{display:grid;gap:3px;width:max-content;user-select:none}
+.cell{width:var(--cs,34px);height:var(--cs,34px);display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.07);border-radius:7px;
+  font-family:'Karla',sans-serif;font-weight:700;
+  font-size:calc(var(--cs,34px) * .5);line-height:1;color:var(--cream)}
+.cell.pick{background:var(--rose);color:#fff}
+.cell.start{background:var(--gold);color:#2E1027}
+.cell.found{background:rgba(107,224,168,.3);color:#C9FFE6}
+.zoom{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.zoom button{width:38px;height:32px;border-radius:9px;border:1px solid rgba(255,240,233,.18);
+  background:rgba(255,255,255,.06);color:var(--cream);font-size:17px;font-weight:700;cursor:pointer}
+.zoom span{color:var(--mauve);font-size:12.5px}
+.jokerbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 22px}
+.joker{border:1px solid rgba(245,196,81,.5);background:rgba(245,196,81,.1);color:var(--gold);
+  border-radius:999px;padding:8px 15px;font:inherit;font-weight:600;font-size:13.5px;cursor:pointer}
+.joker:disabled{opacity:.35;cursor:default}
+.jokerline{color:var(--mauve);font-size:12.5px;max-width:34ch;line-height:1.4}
+.cell.clue{background:var(--gold);color:#2E1027;animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(.9)}}
+.rescue{display:none;margin-top:14px;padding:16px 18px;border-radius:16px;
+  background:rgba(255,77,126,.12);border:1px solid rgba(255,77,126,.35);
+  font-size:15px;line-height:1.5;color:var(--cream)}
+.rescue.open{display:block;animation:in .4s ease}
+.joker.counting{border-color:rgba(255,77,126,.6);background:rgba(255,77,126,.12);color:var(--rose);
+  font-variant-numeric:tabular-nums}
+#panic{position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;transition:opacity .6s;
+  box-shadow:inset 0 0 140px 40px rgba(180,0,40,.75)}
+#panic.on{opacity:1;animation:throb 1.6s infinite}
+#panic.hot{animation:throb .55s infinite}
+@keyframes throb{0%,100%{box-shadow:inset 0 0 120px 30px rgba(180,0,40,.55)}
+  50%{box-shadow:inset 0 0 190px 70px rgba(220,0,50,.95)}}
+#grid.shiver .cell{animation:jitter .16s infinite}
+@keyframes jitter{0%{transform:translate(0,0)}25%{transform:translate(-1px,1px)}
+  50%{transform:translate(1px,-1px)}75%{transform:translate(1px,1px)}100%{transform:translate(-1px,-1px)}}
+.info{margin:0 0 18px}
+.info h5{font-family:'Bricolage Grotesque',sans-serif;font-size:13px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--rose);margin:30px 0 12px;font-weight:700}
+.info h5:first-child{margin-top:0}
+.info ul + h5{margin-top:30px}
+#turkHint{margin:34px 0 0}
+.info ul{list-style:none;margin:0;padding:0}
+.info li{position:relative;padding-left:16px;margin-bottom:10px;font-size:14px;line-height:1.45;color:var(--mauve)}
+.info li::before{content:'';position:absolute;left:0;top:8px;width:5px;height:5px;border-radius:50%;background:var(--rose);opacity:.7}
+.info li b{color:var(--cream);font-weight:600}
+.masked{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.masked span{border:1px solid rgba(255,240,233,.16);border-radius:8px;padding:4px 9px;font-size:13px;
+  font-weight:700;letter-spacing:.08em;color:var(--mauve)}
+.masked span.open{border-color:var(--gold);color:var(--gold)}
+.masked span.found{border-color:var(--ok);color:var(--ok);background:rgba(107,224,168,.12)}
+
+/* ---- guess ---- */
+.lives{font-size:17px;letter-spacing:2px;margin-bottom:14px}
+.hint{color:var(--gold);font-size:15px;margin:0 0 10px}
+.mask{font-family:'Karla',sans-serif;font-weight:700;font-size:clamp(20px,7vw,30px);letter-spacing:.16em;
+  text-align:center;margin:18px 0 22px;min-height:36px;word-break:break-word}
+.keys{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.key{aspect-ratio:1;border-radius:9px;border:1px solid rgba(255,240,233,.16);background:rgba(255,255,255,.06);
+  color:var(--cream);font-family:'Karla',sans-serif;font-weight:700;font-size:15px;cursor:pointer;padding:0}
+.key:disabled{opacity:.25;cursor:default}
+.key.good{background:rgba(107,224,168,.25);border-color:var(--ok);opacity:1}
+.key.bad{background:rgba(255,77,126,.18);border-color:rgba(255,77,126,.4)}
+.solved{color:var(--ok);font-size:15px;min-height:22px;margin-top:14px}
+
+/* ---- quiz ---- */
+.q{font-family:'Bricolage Grotesque',sans-serif;font-size:21px;font-weight:700;margin:0 0 16px;line-height:1.25}
+.opt{display:block;width:100%;text-align:left;margin-bottom:10px;padding:14px 16px;border-radius:14px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,240,233,.14);color:var(--cream);font:inherit;font-size:15px;cursor:pointer}
+.opt:active{transform:scale(.99)}
+.opt.right{background:rgba(107,224,168,.2);border-color:var(--ok)}
+.opt.wrong{background:rgba(255,77,126,.18);border-color:var(--rose)}
+.reply{margin-top:14px;color:var(--gold);font-size:14.5px;min-height:22px}
+
+/* ---- lock / keypad ---- */
+.lockClue{font-size:17px;line-height:1.4;margin:0 0 6px;font-weight:600}
+.lockNote{color:var(--mauve);font-size:13.5px;margin:0 0 18px}
+.dots{display:flex;justify-content:center;gap:14px;margin:6px 0 22px}
+.dot{width:46px;height:58px;border-radius:12px;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,240,233,.16);display:flex;align-items:center;justify-content:center;
+  font-family:'Karla',sans-serif;font-weight:700;font-size:24px}
+.dot.on{border-color:var(--rose);background:rgba(255,77,126,.14)}
+.dots.wrong{animation:shake .4s}
+.dots.right .dot{border-color:var(--ok);background:rgba(107,224,168,.18)}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-9px)}75%{transform:translateX(9px)}}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;max-width:300px;margin:0 auto}
+.pk{aspect-ratio:1.25;border-radius:14px;border:1px solid rgba(255,240,233,.14);background:rgba(255,255,255,.06);
+  color:var(--cream);font-family:'Karla',sans-serif;font-weight:700;font-size:22px;cursor:pointer}
+.pk:active{background:rgba(255,77,126,.2)}
+.pk.soft{font-size:14px;font-weight:600;color:var(--mauve)}
+.unlocked{margin-top:18px;color:var(--gold);font-size:15px;min-height:24px;text-align:center}
+
+/* ---- puzzle ---- */
+#puzzle{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;aspect-ratio:1;margin-bottom:14px}
+.pz{border-radius:10px;background-size:300% 300%;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-family:'Karla',sans-serif;font-weight:700;font-size:18px;color:rgba(255,255,255,.75);background-color:#5A1C43}
+.pz.hole{background:none;background-color:transparent;cursor:default}
+.peek{display:flex;align-items:center;gap:10px}
+.peek img{width:54px;height:54px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,240,233,.25)}
+
+/* ---- letter ---- */
+.letter{background:linear-gradient(160deg,#FFF6F0,#FFE7DE);color:#3A1129;border-radius:20px;padding:24px 22px;
+  font-size:16px;line-height:1.6;white-space:pre-line;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.letter h3{font-family:'Bricolage Grotesque',sans-serif;font-size:24px;margin:0 0 12px;color:#B01E52}
+.sign{margin-top:16px;font-family:'Silkscreen',monospace;font-size:12px;color:#B01E52}
+.btn.next{display:block;width:100%;margin-top:20px;background:#B01E52}
+.nextstep{display:none;margin-top:18px;padding:20px 18px;border-radius:16px;
+  background:#2E1027;color:var(--cream);white-space:pre-line;font-size:15.5px;line-height:1.6;
+  animation:in .5s ease}
+.nextstep.open{display:block}
+.nextstep h4{font-family:'Bricolage Grotesque',sans-serif;font-size:20px;margin:0 0 12px;color:var(--gold)}
+
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(140%);
+  background:var(--cream);color:var(--plum);padding:12px 20px;border-radius:999px;font-weight:600;font-size:14px;
+  transition:transform .35s;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.4);max-width:88vw;text-align:center}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+.btn{display:inline-block;margin-top:16px;background:var(--rose);color:#fff;border:none;border-radius:999px;
+  padding:13px 22px;font:inherit;font-weight:600;font-size:15px;cursor:pointer}
+.btn:active{transform:scale(.98)}
+.resetLink{display:none;margin:18px auto 0;background:none;border:none;color:var(--mauve);
+  font:inherit;font-size:12.5px;text-decoration:underline;cursor:pointer;opacity:.7}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="top">
+    <div class="brand">LOVE ARCADE</div>
+    <div class="tokens" id="tokens"></div>
+  </div>
+
+  <!-- HOME -->
+  <section id="home" class="screen live">
+    <div class="hero">
+      <h1>Five games,<br>one <em>prize</em>.</h1>
+      <p>Win all five and the letter at the end unlocks. No skipping, baby.</p>
+      <div class="counter"><b id="days">0</b><span>DAYS TOGETHER</span></div>
+    </div>
+    <div class="cards" id="cards"></div>
+    <button id="reset" class="resetLink">start over from zero</button>
+  </section>
+
+  <!-- 1 WORD SEARCH -->
+  <section id="word" class="screen">
+    <div class="bar"><button class="back" data-home>Back</button><span class="stat" id="wordStat">0/0</span></div>
+    <h2 class="title">Our words</h2>
+    <p class="sub">Tap the first letter, then the last letter. Swipe the board to move around it.</p>
+    <div class="zoom">
+      <button id="zOut" aria-label="Smaller letters">−</button>
+      <button id="zIn" aria-label="Bigger letters">+</button>
+      <span id="gridInfo"></span>
+    </div>
+    <div id="gridWrap"><div id="grid"></div></div>
+    <div class="rescue" id="rescue"></div>
+    <div class="jokerbar">
+      <button class="joker" id="jokerBtn">Use a hint</button>
+      <span class="jokerline">Only if you are stuck.</span>
+    </div>
+    <div class="info" id="wordHint"></div>
+    <div class="info" id="turkHint"></div>
+  </section>
+
+  <!-- 2 GUESS THE WORD -->
+  <section id="guess" class="screen">
+    <div class="bar"><button class="back" data-home>Back</button><span class="stat" id="guessStat">1/1</span></div>
+    <h2 class="title">Guess the word</h2>
+    <p class="sub">Six hearts per word. A wrong letter costs one.</p>
+    <div class="lives" id="lives"></div>
+    <p class="hint" id="hint"></p>
+    <div class="mask" id="mask"></div>
+    <div class="keys" id="keys"></div>
+    <div class="solved" id="solvedMsg"></div>
+  </section>
+
+  <!-- 3 QUIZ -->
+  <section id="quiz" class="screen">
+    <div class="bar"><button class="back" data-home>Back</button><span class="stat" id="quizStat">1/1</span></div>
+    <h2 class="title">How well do you know me</h2>
+    <p class="sub">One wrong is allowed. Two and you start over.</p>
+    <div id="quizBox"></div>
+  </section>
+
+  <!-- 4 LOCK -->
+  <section id="lock" class="screen">
+    <div class="bar"><button class="back" data-home>Back</button><span class="stat" id="lockStat">1/1</span></div>
+    <h2 class="title">Crack my code</h2>
+    <p class="sub">Four digits per lock. Only you have the answers.</p>
+    <p class="lockClue" id="lockClue"></p>
+    <p class="lockNote" id="lockNote"></p>
+    <div class="dots" id="dots"></div>
+    <div class="pad" id="pad"></div>
+    <div class="unlocked" id="unlockedMsg"></div>
+  </section>
+
+  <!-- 5 PUZZLE -->
+  <section id="puzzle-s" class="screen">
+    <div class="bar"><button class="back" data-home>Back</button><span class="stat" id="pzStat">0 moves</span></div>
+    <h2 class="title">Put us back together</h2>
+    <p class="sub">Tap a tile next to the empty space to slide it.</p>
+    <div id="puzzle"></div>
+    <div class="peek" id="peek"></div>
+  </section>
+
+  <!-- LETTER -->
+  <section id="letter" class="screen">
+    <div class="bar"><button class="back" data-home>Back</button><span class="stat">100%</span></div>
+    <div class="letter">
+      <h3 id="letterTitle"></h3>
+      <div id="letterBody"></div>
+      <div class="sign" id="letterSign"></div>
+      <button class="btn next" id="nextBtn"></button>
+      <div class="nextstep" id="nextStep">
+        <h4 id="nextTitle"></h4>
+        <div id="nextText"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="panic"></div>
+<div id="toast"></div>
+
+<script>
+/* ==========================================================
+   EDIT EVERYTHING IN HERE. Nothing below CONFIG needs changing.
+   ========================================================== */
+const CONFIG = {
+
+  startDate: "2025-07-29",
+
+  /* ---- TEST SWITCH. true shows a button on the home screen that wins all five
+     games instantly so you can check the letter. SET THIS TO false BEFORE YOU
+     SEND HER THE LINK, otherwise she can skip everything. ---- */
+  testButton: false,
+
+  /* ---- GAME 1: word search.
+     gridSize = how big the board is. 50 is huge and takes a while,
+     18 to 22 is a normal fun size. Letters only in the words, no spaces.
+     The board grows by itself if a word is longer than the size you set. ---- */
+  gridSize: 20,
+  words: [
+    "BABY",
+    "SEXY",
+    "PRINCESS",
+    "MAMA",
+    "MAMACITA",
+    "CHOCOLATE",
+    "PRETTY",
+    "WIFEY",
+    "MYWOMAN",
+    "LOVEOFMYLIFE",
+    "ASKIM",
+    "BEBEGIM",
+    "CANIM",
+    "GUZELIM",
+    "TATLIM",
+    "HAYATIM",
+    "PRENSESIM",
+    "BIRTANEM",
+    "GYM",
+    "KUIP",
+    "ROTTERDAM",
+    "PATHE",
+    "ILOVEYOU",
+    "SENISEVIYORUM",
+    "MYQUEEN",
+    "HABIBI",
+    "SWEETHEART",
+    "MIAMOR",
+    "FOREVER",
+    "MYPEACE"
+  ],
+
+  /* ---- GAME 2: guess the word ---- */
+  guess: [
+    { word:"SEXYLADY", hint:"what I call you when nobody else is around" },
+    { word:"MAMACITA", hint:"the word you wish I used more" },
+    { word:"ASKIM",    hint:"the Turkish one you learned first" },
+    { word:"MYWOMAN",  hint:"how I talk about you to everyone else" },
+    { word:"MYWIFE",   hint:"what are you to me?" }
+  ],
+
+  /* ---- GAME 3: quiz. "answer" is the option number, first option = 0.
+     Use answer:"any" for a trick question where every choice counts. ---- */
+  quiz: [
+    { q:"Where did I see you for the first time?",
+      options:["At the gym","On the street","Through a friend","At work"],
+      answer:0,
+      reply:"The gym. My whole workout was finished after that." },
+
+    { q:"Who made the first move?",
+      options:["You did","I did, I asked for your number","A friend set it up","Nobody, it just happened"],
+      answer:1,
+      reply:"Me. Same day. I asked for your number before I could talk myself out of it." },
+
+    { q:"Where was our first unofficial date?",
+      options:["In a restaurant","In my car","At the cinema","At the gym again"],
+      answer:1,
+      reply:"In the car. Best hours of that whole month." },
+
+    { q:"Where did I take you for our first real date?",
+      options:["Rotterdam","Amsterdam","The beach","Efteling"],
+      answer:0,
+      reply:"Rotterdam. I was more nervous that day than I let you see." },
+
+    { q:"What do I call you when nobody else is around?",
+      options:["Princess","Sexylady","Queen","Boss"],
+      answer:1,
+      reply:"Sexylady. And you act annoyed every single time." },
+
+    { q:"What do I want ten years from now?",
+      options:["A big house","A fast car","Just you","A holiday every year"],
+      answer:2,
+      reply:"Just you. And everything else is just extra." },
+
+    { q:"Who loves who more?",
+      options:["Me","You","Same","Wrong question"],
+      answer:"any",
+      reply:"Trick question. Whatever you picked is right." }
+  ],
+  quizAllowedWrong: 1,
+
+  /* ---- GAME 4: keypad locks. Four digits each. ---- */
+  locks: [
+    { clue:"The day it became official. Day and month.",
+      note:"Four digits, so 3 August would be 0308.",
+      code:"2907",
+      reveal:"29 July 2025. My favourite date in the calendar." },
+
+    { clue:"Your birthday. Day and month.",
+      note:"Same format. Yes, I know it by heart.",
+      code:"0512",
+      reveal:"5 December. The second date I never forget." },
+
+    { clue:"The year I saw you for the first time. All four digits.",
+      note:"The year everything changed for me.",
+      code:"2025",
+      reveal:"2025. The year my life got better." }
+  ],
+
+  /* ---- GAME 5: upload square photos to the same repo and list them here.
+     The puzzle picks one at random. No photos = numbered tiles, still works. ---- */
+  photos: ["us.jpg"],
+
+  /* ---- The reward ---- */
+  letterTitle: "You won everything",
+  letterBody: `You just played five games I made with your face in my head the whole time.
+
+I am not good with big speeches, so I built this instead. Every word in that puzzle is a word I only say to you. Every question in that quiz has one answer and it is always you.
+
+Thank you for the days you carry me without saying anything. Thank you for being patient with me on my quiet days.
+
+I am not going anywhere.`,
+  letterSign: "YOURS, ALWAYS",
+
+  /* ---- The button inside the letter that sends her to the real world ---- */
+  finalStep: {
+    button: "Wait. One more thing.",
+    title: "Your next step",
+    text: `This screen was never the prize.
+
+I left something for you out there. A real one, you can hold it.
+
+The hint is one word: UNOFFICIAL.
+
+Look around the trees at the parking lot. Which parking lot? That one is yours to remember.
+
+Or did you already forget our first date?`
+  }
+};
+
+/* ==========================================================
+   ENGINE
+   ========================================================== */
+const GAMES = [
+  { id:"word",   screen:"word",     title:"Our words",              sub:"Find every word we say to each other", icon:"🔤" },
+  { id:"guess",  screen:"guess",    title:"Guess the word",         sub:"Six hearts per word",                  icon:"🔤" },
+  { id:"quiz",   screen:"quiz",     title:"How well do you know me",sub:"Seven questions, no cheating",         icon:"❓" },
+  { id:"lock",   screen:"lock",     title:"Crack my code",          sub:"Three locks, four digits each",        icon:"🔒" },
+  { id:"puzzle", screen:"puzzle-s", title:"Put us back together",   sub:"Slide the photo into place",           icon:"🧩" }
+];
+const won = { word:false, guess:false, quiz:false, lock:false, puzzle:false };
+
+/* ---- progress saving. Uses the phone's own storage, wrapped in try/catch
+   so the page still works if the browser blocks it. ---- */
+const STORE = 'lovearcade-v5';
+let SAVED = null;
+try { SAVED = JSON.parse(localStorage.getItem(STORE)); } catch(e){ SAVED = null; }
+if(SAVED && SAVED.won) Object.keys(won).forEach(k => { if(SAVED.won[k]) won[k] = true; });
+
+function save(){
+  try{
+    localStorage.setItem(STORE, JSON.stringify({
+      won,
+      size: SIZE,
+      board: board.map(r => r.join('')),
+      placed: PLACED,
+      found: [...foundWords],
+      jokers,
+      clued,
+      deadline
+    }));
+  }catch(e){}
+}
+function wipe(){
+  try{ localStorage.removeItem(STORE); }catch(e){}
+  location.reload();
+}
+
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+
+function show(id){
+  $$('.screen').forEach(s => s.classList.remove('live'));
+  $('#'+id).classList.add('live');
+  window.scrollTo(0,0);
+}
+function toast(msg){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(()=>t.classList.remove('show'), 2800);
+}
+function winGame(id, msg){
+  const first = !won[id];
+  won[id] = true;
+  save();
+  paintTokens(); paintCards(); toast(msg);
+  if(first && Object.values(won).every(Boolean)){
+    setTimeout(()=>{ show('letter'); toast("All five. The letter is yours."); }, 1500);
+  }
+}
+function paintTokens(){
+  $('#tokens').innerHTML = GAMES.map(g => `<span class="token ${won[g.id]?'on':''}">💖</span>`).join('');
+}
+function paintCards(){
+  const all = Object.values(won).every(Boolean);
+  $('#cards').innerHTML = GAMES.map((g,i) => `
+    <button class="card ${won[g.id]?'done':''}" data-go="${g.screen}">
+      <span class="no">0${i+1}</span>
+      <span class="txt"><strong>${g.title}</strong><small>${g.sub}</small></span>
+      <span class="mark">${won[g.id]?'💖':g.icon}</span>
+    </button>`).join('')
+    + (all ? `<button class="card" data-go="letter" style="border-color:var(--gold)">
+      <span class="no">💌</span>
+      <span class="txt"><strong>Open the letter</strong><small>You earned all five hearts</small></span>
+      <span class="mark">💖</span></button>` : '');
+  $('#reset').style.display = Object.values(won).some(Boolean) ? 'inline' : 'none';
+}
+document.addEventListener('click', e => {
+  const go = e.target.closest('[data-go]');
+  if(go){ show(go.dataset.go); return; }
+  if(e.target.closest('[data-home]')) show('home');
+});
+
+$('#reset').addEventListener('click', () => {
+  if(confirm("This wipes all your hearts and starts everything again. Sure?")) wipe();
+});
+
+/* test button: wins everything at once */
+if(CONFIG.testButton){
+  const b = document.createElement('button');
+  b.className = 'btn';
+  b.style.cssText = 'background:none;border:1px dashed rgba(255,240,233,.35);color:var(--mauve);font-size:13px;padding:10px 16px';
+  b.textContent = 'TEST: unlock all five';
+  b.addEventListener('click', () => {
+    Object.keys(won).forEach(k => won[k] = true);
+    paintTokens(); paintCards(); show('letter');
+  });
+  $('#cards').after(b);
+}
+
+(function days(){
+  const start = new Date(CONFIG.startDate + "T00:00:00");
+  const n = Math.floor((Date.now() - start.getTime()) / 86400000);
+  $('#days').textContent = n > 0 ? n : 0;
+})();
+
+const TR_MAP = {'Ş':'S','Ğ':'G','Ü':'U','Ö':'O','Ç':'C','İ':'I','Â':'A','Î':'I','Û':'U'};
+const ascii = w => w.toUpperCase().split('').map(c => TR_MAP[c] || c).filter(c => /[A-Z]/.test(c)).join('');
+
+/* ==========================================================
+   GAME 1: WORD SEARCH
+   ========================================================== */
+const WORDS = CONFIG.words.map(w => ({ show:w, key:ascii(w) })).filter(w => w.key.length > 1)
+  .sort((a,b) => b.key.length - a.key.length);
+const DIRS = [[0,1],[0,-1],[1,0],[-1,0]];  /* left, right, down, up. no diagonals */
+let SIZE = 13, board = [], foundWords = new Set(), PLACED = {};
+let jokers = 3, clued = [];
+let HG = [], VG = [], HE = [], VE = [];   /* horizontal/vertical occupancy + endpoints */
+const blank = () => Array.from({length:SIZE}, () => Array(SIZE).fill(false));
+
+function buildBoard(){
+  const longest = Math.max(...WORDS.map(w => w.key.length));
+  const wanted = Math.max(CONFIG.gridSize || 14, longest + 2);
+  for(let size = wanted; size <= wanted + 4; size++){
+    SIZE = size;
+    for(let attempt = 0; attempt < 60; attempt++){
+      board = Array.from({length:SIZE}, () => Array(SIZE).fill(''));
+      HG = blank(); VG = blank(); HE = blank(); VE = blank();
+      PLACED = {};
+      if(WORDS.every(placeWord)) { fillRest(); return; }
+    }
+  }
+  fillRest();
+}
+function fillRest(){
+  const A = "ABCDEFGHIJKLMNOPRSTUVYZ";
+  for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++)
+    if(!board[r][c]) board[r][c] = A[Math.floor(Math.random()*A.length)];
+}
+function placeWord(w){
+  const len = w.key.length;
+  if(len > SIZE) return false;
+  for(let t=0;t<600;t++){
+    const [dr,dc] = DIRS[Math.floor(Math.random()*DIRS.length)];
+    const horiz = dr === 0;
+    const r0 = Math.floor(Math.random()*SIZE), c0 = Math.floor(Math.random()*SIZE);
+    const r1 = r0 + dr*(len-1), c1 = c0 + dc*(len-1);
+    if(r1<0||r1>=SIZE||c1<0||c1>=SIZE) continue;
+
+    /* nothing may touch the head or the tail of the word,
+       otherwise two words look like one long word */
+    const rb = r0-dr, cb = c0-dc, ra = r1+dr, ca = c1+dc;
+    if(rb>=0 && rb<SIZE && cb>=0 && cb<SIZE && board[rb][cb]) continue;
+    if(ra>=0 && ra<SIZE && ca>=0 && ca<SIZE && board[ra][ca]) continue;
+
+    const mine  = horiz ? HG : VG;
+    const cross = horiz ? VG : HG;
+    const crossEnd = horiz ? VE : HE;
+
+    let ok = true;
+    for(let i=0;i<len;i++){
+      const r = r0+dr*i, c = c0+dc*i;
+      if(mine[r][c]){ ok = false; break; }              /* never lie along another word */
+      if(cross[r][c]){
+        if(board[r][c] !== w.key[i]) { ok = false; break; }
+        if(crossEnd[r][c])           { ok = false; break; }  /* not on their first or last letter */
+        if(i === 0 || i === len-1)   { ok = false; break; }  /* not on my first or last letter */
+      }
+    }
+    if(!ok) continue;
+
+    const cells = [];
+    for(let i=0;i<len;i++){
+      const r = r0+dr*i, c = c0+dc*i;
+      board[r][c] = w.key[i];
+      mine[r][c] = true;
+      cells.push([r,c]);
+    }
+    const ends = horiz ? HE : VE;
+    ends[r0][c0] = true;
+    ends[r1][c1] = true;
+    PLACED[w.key] = cells;
+    return true;
+  }
+  return false;
+}
+/* the row under the board: Turkish helpers, fake blanks, and everything she finds */
+const HINT_CHIPS = [
+  { w:"BEBEGIM" },
+  { fake:5 },
+  { w:"CANIM" },
+  { w:"GUZELIM" },
+  { w:"SENISEVIYORUM", hidden:true },
+  { w:"TATLIM" },
+  { w:"ASKIM", hidden:true },
+  { w:"HAYATIM" },
+  { fake:6 },
+  { w:"PRENSESIM" },
+  { w:"BIRTANEM" }
+];
+let extraFound = [];
+
+function paintChips(){
+  const inRow = HINT_CHIPS.filter(c => c.w).map(c => c.w);
+  const html = HINT_CHIPS.map(c => {
+    if(c.fake) return `<span>${'X'.repeat(c.fake)}</span>`;
+    if(foundWords.has(c.w)) return `<span class="found">${c.w}</span>`;
+    if(c.hidden) return `<span>${'X'.repeat(c.w.length)}</span>`;
+    return `<span class="open">${c.w}</span>`;
+  }).concat(
+    extraFound.filter(k => !inRow.includes(k)).map(k => {
+      const w = WORDS.find(x => x.key === k);
+      return `<span class="found">${w ? w.show : k}</span>`;
+    })
+  ).join('');
+  $('#turkHint').innerHTML = `<div class="masked">${html}</div>`;
+}
+
+function renderWord(){
+  if(SAVED && SAVED.board && SAVED.placed && SAVED.size){
+    SIZE = SAVED.size;
+    board = SAVED.board.map(r => r.split(''));
+    PLACED = SAVED.placed;
+    foundWords = new Set(SAVED.found || []);
+    jokers = (typeof SAVED.jokers === 'number') ? SAVED.jokers : 3;
+    clued = SAVED.clued || [];
+    deadline = SAVED.deadline || null;
+  } else {
+    buildBoard();
+    foundWords = new Set();
+  }
+  const g = $('#grid');
+  g.style.gridTemplateColumns = `repeat(${SIZE}, var(--cs, 34px))`;
+  g.innerHTML = board.map((row,r) => row.map((ch,c) =>
+    `<div class="cell" data-r="${r}" data-c="${c}">${ch}</div>`).join('')).join('');
+
+  $('#wordHint').innerHTML = `
+    <h5>The board</h5>
+    <ul>
+      <li><b>${WORDS.length} words</b> are hidden in there. Every single one is ours.</li>
+      <li>Nothing tells you what they are. You already know them.</li>
+    </ul>
+    <h5>How it works</h5>
+    <ul>
+      <li>Tap the <b>first letter</b> of a word, then tap the <b>last letter</b>. That is it.</li>
+      <li>Straight lines only: <b>left, right, up or down</b>. Backwards counts. No diagonals.</li>
+      <li>Words can cross each other on one letter, like a plus sign. No word ever starts inside another one.</li>
+    </ul>`;
+  $('#gridInfo').textContent = `${SIZE} x ${SIZE} board`;
+
+  foundWords.forEach(key => {
+    (PLACED[key] || []).forEach(([r,c]) => {
+      const cell = $(`.cell[data-r="${r}"][data-c="${c}"]`);
+      if(cell) cell.classList.add('found');
+    });
+  });
+  extraFound = [...foundWords];
+  paintChips();
+  $('#wordStat').textContent = `${foundWords.size}/${WORDS.length}`;
+  clued.forEach(key => {
+    if(foundWords.has(key)) return;
+    const first = (PLACED[key] || [])[0];
+    if(!first) return;
+    const cell = $(`.cell[data-r="${first[0]}"][data-c="${first[1]}"]`);
+    if(cell) cell.classList.add('clue');
+  });
+  paintJoker();
+  if(!won.word && deadline){
+    if(Date.now() >= deadline) endCountdown(); else runTick();
+  }
+  save();
+}
+
+/* three jokers, then a countdown */
+let deadline = null, tick = null;
+const PANIC_MS = 7 * 60 * 1000;
+
+function fmt(ms){
+  const t = Math.max(0, Math.ceil(ms/1000));
+  return Math.floor(t/60) + ':' + String(t%60).padStart(2,'0');
+}
+function paintJoker(){
+  const b = $('#jokerBtn');
+  if(jokers > 0){
+    b.className = 'joker';
+    b.textContent = `Use a hint (${jokers} left)`;
+    b.disabled = false;
+    return;
+  }
+  b.disabled = true;
+  if(deadline && Date.now() < deadline){
+    b.className = 'joker counting';
+    b.textContent = fmt(deadline - Date.now());
+    $('.jokerline').textContent = 'Hints are gone. Clock is running.';
+  } else {
+    b.className = 'joker';
+    b.textContent = 'No hints left';
+  }
+}
+function panicLevel(){
+  const left = deadline - Date.now();
+  const p = $('#panic');
+  if(won.word || left <= 0){ p.className = ''; $('#grid').classList.remove('shiver'); return; }
+  if(left < 30000){ p.className = 'on hot'; $('#grid').classList.add('shiver'); }
+  else if(left < 120000){ p.className = 'on'; $('#grid').classList.remove('shiver'); }
+  else { p.className = ''; $('#grid').classList.remove('shiver'); }
+}
+function runTick(){
+  clearInterval(tick);
+  tick = setInterval(() => {
+    if(won.word || !deadline){ stopCountdown(); return; }
+    if(Date.now() >= deadline){ endCountdown(); return; }
+    paintJoker(); panicLevel();
+  }, 250);
+  paintJoker(); panicLevel();
+}
+function stopCountdown(){
+  clearInterval(tick); tick = null;
+  $('#panic').className = '';
+  $('#grid').classList.remove('shiver');
+}
+function endCountdown(){
+  stopCountdown();
+  paintJoker();
+  $('#rescue').textContent = "Baby, just use AI for the rest. It is fine. I love you 💖";
+  $('#rescue').classList.add('open');
+}
+
+$('#jokerBtn').addEventListener('click', () => {
+  if(jokers <= 0) return;
+  const left = WORDS.filter(w => !foundWords.has(w.key) && !clued.includes(w.key));
+  const pool = left.length ? left : WORDS.filter(w => !foundWords.has(w.key));
+  if(!pool.length) return;
+  const pick = pool[Math.floor(Math.random()*pool.length)];
+  const first = (PLACED[pick.key] || [])[0];
+  if(first){
+    const cell = $(`.cell[data-r="${first[0]}"][data-c="${first[1]}"]`);
+    if(cell){ cell.classList.add('clue'); cell.scrollIntoView({block:'center', inline:'center'}); }
+  }
+  if(!clued.includes(pick.key)) clued.push(pick.key);
+  jokers--;
+  toast(`${pick.show} starts on the gold square 💛`);
+  if(jokers === 0 && !deadline){ deadline = Date.now() + PANIC_MS; runTick(); }
+  paintJoker(); save();
+});
+
+/* zoom */
+let cs = 34;
+function setZoom(v){
+  cs = Math.max(20, Math.min(46, v));
+  document.documentElement.style.setProperty('--cs', cs + 'px');
+}
+setZoom(cs);
+$('#zIn').addEventListener('click', () => setZoom(cs + 4));
+$('#zOut').addEventListener('click', () => setZoom(cs - 4));
+
+/* tap the first letter, then the last letter */
+let anchor = null;
+const clearMarks = () => $$('.cell.pick, .cell.start').forEach(c => c.classList.remove('pick','start'));
+
+$('#grid').addEventListener('click', e => {
+  const cell = e.target.closest('.cell');
+  if(!cell) return;
+
+  if(!anchor){
+    clearMarks();
+    anchor = cell;
+    cell.classList.add('start');
+    return;
+  }
+  if(anchor === cell){ clearMarks(); anchor = null; return; }
+
+  const path = lineBetween(anchor, cell);
+  if(!path){
+    clearMarks();
+    anchor = cell;
+    cell.classList.add('start');
+    return;
+  }
+
+  const str = path.map(c => c.textContent).join('');
+  const rev = str.split('').reverse().join('');
+  const hit = WORDS.find(w => (w.key === str || w.key === rev) && !foundWords.has(w.key));
+
+  clearMarks();
+  anchor = null;
+
+  if(hit){
+    foundWords.add(hit.key);
+    path.forEach(c => c.classList.add('found'));
+    if(!extraFound.includes(hit.key)) extraFound.push(hit.key);
+    paintChips();
+    $('#wordStat').textContent = `${foundWords.size}/${WORDS.length}`;
+    save();
+    if(foundWords.size === WORDS.length){ stopCountdown(); winGame('word', "Every word found 💖"); }
+  } else {
+    path.forEach(c => { if(!c.classList.contains('found')) c.classList.add('pick'); });
+    setTimeout(clearMarks, 320);
+  }
+});
+
+function lineBetween(a,b){
+  const r0 = +a.dataset.r, c0 = +a.dataset.c, r1 = +b.dataset.r, c1 = +b.dataset.c;
+  if(!(r0===r1 || c0===c1 || Math.abs(r1-r0)===Math.abs(c1-c0))) return null;
+  const dr = Math.sign(r1-r0), dc = Math.sign(c1-c0);
+  const dist = Math.max(Math.abs(r1-r0), Math.abs(c1-c0));
+  const out = [];
+  for(let i=0;i<=dist;i++){
+    const cell = $(`.cell[data-r="${r0+dr*i}"][data-c="${c0+dc*i}"]`);
+    if(!cell) return null;
+    out.push(cell);
+  }
+  return out;
+}
+
+/* ==========================================================
+   GAME 2: GUESS THE WORD
+   ========================================================== */
+const GUESS = CONFIG.guess.map(g => ({ key:ascii(g.word), show:g.word, hint:g.hint }));
+const ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
+let gi = 0, lives = 6, picked = new Set(), guessLock = false;
+
+function renderGuess(){ gi = 0; drawGuess(); }
+function drawGuess(){
+  lives = 6; picked = new Set(); guessLock = false;
+  const item = GUESS[gi];
+  $('#guessStat').textContent = `${gi+1}/${GUESS.length}`;
+  $('#hint').textContent = item.hint;
+  $('#solvedMsg').textContent = '';
+  $('#keys').innerHTML = ALPHA.map(l => `<button class="key" data-l="${l}">${l}</button>`).join('');
+  paintLives(); paintMask();
+}
+function paintLives(){
+  $('#lives').innerHTML = '💖'.repeat(lives) + '<span style="opacity:.25">' + '🤍'.repeat(6-lives) + '</span>';
+}
+function paintMask(){
+  $('#mask').textContent = GUESS[gi].key.split('').map(c => picked.has(c) ? c : '_').join(' ');
+}
+$('#keys').addEventListener('click', e => {
+  const k = e.target.closest('.key');
+  if(!k || guessLock || k.disabled) return;
+  const l = k.dataset.l, key = GUESS[gi].key;
+  k.disabled = true;
+  picked.add(l);
+  if(key.includes(l)){
+    k.classList.add('good'); paintMask();
+    if(key.split('').every(c => picked.has(c))){
+      guessLock = true;
+      $('#solvedMsg').textContent = `"${GUESS[gi].show}" 💖`;
+      setTimeout(() => {
+        gi++;
+        if(gi < GUESS.length) drawGuess();
+        else { winGame('guess', "You cracked all of them 💖"); show('home'); }
+      }, 5000);
+    }
+  } else {
+    k.classList.add('bad'); lives--; paintLives();
+    if(lives <= 0){
+      guessLock = true;
+      $('#mask').textContent = GUESS[gi].key.split('').join(' ');
+      $('#solvedMsg').textContent = "Out of hearts. Same word again.";
+      setTimeout(drawGuess, 2000);
+    }
+  }
+});
+
+/* ==========================================================
+   GAME 3: QUIZ
+   ========================================================== */
+let qi = 0, wrong = 0, answered = false;
+function renderQuiz(){ qi = 0; wrong = 0; drawQ(); }
+function drawQ(){
+  const item = CONFIG.quiz[qi];
+  answered = false;
+  $('#quizStat').textContent = `${qi+1}/${CONFIG.quiz.length}`;
+  $('#quizBox').innerHTML = `
+    <p class="q">${item.q}</p>
+    ${item.options.map((o,i) => `<button class="opt" data-i="${i}">${o}</button>`).join('')}
+    <div class="reply" id="reply"></div>`;
+}
+$('#quizBox').addEventListener('click', e => {
+  const btn = e.target.closest('.opt');
+  if(!btn || answered) return;
+  answered = true;
+  const item = CONFIG.quiz[qi];
+  const right = item.answer === "any" || +btn.dataset.i === item.answer;
+  if(right) btn.classList.add('right');
+  else {
+    btn.classList.add('wrong');
+    $$('#quizBox .opt')[item.answer].classList.add('right');
+    wrong++;
+  }
+  $('#reply').textContent = item.reply;
+  setTimeout(() => {
+    if(wrong > CONFIG.quizAllowedWrong){
+      toast("Too many wrong. From the top, baby.");
+      renderQuiz(); return;
+    }
+    qi++;
+    if(qi < CONFIG.quiz.length) drawQ();
+    else { winGame('quiz', wrong === 0 ? "Perfect score. You know me 💖" : "You passed 💖"); show('home'); }
+  }, 10000);
+});
+
+/* ==========================================================
+   GAME 4: CRACK MY CODE
+   ========================================================== */
+let li = 0, entry = "", lockBusy = false, lockTries = 0;
+function renderLock(){ li = 0; drawLock(); }
+function drawLock(){
+  entry = ""; lockBusy = false; lockTries = 0;
+  const l = CONFIG.locks[li];
+  $('#lockStat').textContent = `${li+1}/${CONFIG.locks.length}`;
+  $('#lockClue').textContent = l.clue;
+  $('#lockNote').textContent = l.note || "";
+  $('#unlockedMsg').textContent = "";
+  $('#pad').innerHTML =
+    [1,2,3,4,5,6,7,8,9].map(n => `<button class="pk" data-n="${n}">${n}</button>`).join('') +
+    `<button class="pk soft" data-act="clear">clear</button>
+     <button class="pk" data-n="0">0</button>
+     <button class="pk soft" data-act="del">del</button>`;
+  paintDots();
+}
+function paintDots(){
+  $('#dots').className = "dots";
+  $('#dots').innerHTML = [0,1,2,3].map(i =>
+    `<div class="dot ${entry[i]?'on':''}">${entry[i] || ''}</div>`).join('');
+}
+$('#pad').addEventListener('click', e => {
+  const b = e.target.closest('.pk');
+  if(!b || lockBusy) return;
+  if(b.dataset.act === "clear") entry = "";
+  else if(b.dataset.act === "del") entry = entry.slice(0,-1);
+  else if(entry.length < 4) entry += b.dataset.n;
+  paintDots();
+  if(entry.length === 4) checkLock();
+});
+function checkLock(){
+  const l = CONFIG.locks[li];
+  lockBusy = true;
+  if(entry === String(l.code)){
+    $('#dots').classList.add('right');
+    $('#unlockedMsg').textContent = l.reveal;
+    setTimeout(() => {
+      li++;
+      if(li < CONFIG.locks.length) drawLock();
+      else { winGame('lock', "Every lock open 💖"); show('home'); }
+    }, 2200);
+  } else {
+    lockTries++;
+    $('#dots').classList.add('wrong');
+    $('#unlockedMsg').textContent = lockTries >= 3 ? "Think about us, not about numbers." : "Not it. Try again.";
+    setTimeout(() => { entry = ""; paintDots(); lockBusy = false; }, 700);
+  }
+}
+
+/* ==========================================================
+   GAME 5: SLIDING PUZZLE
+   ========================================================== */
+let tiles = [], pzMoves = 0, photo = null;
+(function loadPhotos(){
+  const list = (CONFIG.photos || []).slice();
+  const ok = [];
+  let pending = list.length;
+  if(!pending) return;
+  list.forEach(src => {
+    const img = new Image();
+    img.onload = () => { ok.push(src); done(); };
+    img.onerror = done;
+    img.src = src;
+  });
+  function done(){
+    if(--pending > 0) return;
+    if(ok.length){
+      photo = ok[Math.floor(Math.random()*ok.length)];
+      drawPuzzle(); drawPeek();
+    }
+  }
+})();
+function renderPuzzle(){
+  tiles = [0,1,2,3,4,5,6,7,8];
+  pzMoves = 0;
+  $('#pzStat').textContent = "0 moves";
+  for(let i=0;i<200;i++){
+    const hole = tiles.indexOf(8);
+    const opts = neighbours(hole);
+    const pick = opts[Math.floor(Math.random()*opts.length)];
+    [tiles[hole], tiles[pick]] = [tiles[pick], tiles[hole]];
+  }
+  if(solved()) [tiles[0], tiles[1]] = [tiles[1], tiles[0]];
+  drawPuzzle(); drawPeek();
+}
+function neighbours(i){
+  const r = Math.floor(i/3), c = i%3, out = [];
+  if(r>0) out.push(i-3);
+  if(r<2) out.push(i+3);
+  if(c>0) out.push(i-1);
+  if(c<2) out.push(i+1);
+  return out;
+}
+function drawPuzzle(){
+  $('#puzzle').innerHTML = tiles.map((t,i) => {
+    if(t === 8) return `<div class="pz hole" data-i="${i}"></div>`;
+    const r = Math.floor(t/3), c = t%3;
+    const style = photo ? `background-image:url('${photo}');background-position:${c*50}% ${r*50}%;` : '';
+    return `<div class="pz" data-i="${i}" style="${style}">${photo ? '' : (t+1)}</div>`;
+  }).join('');
+}
+function drawPeek(){
+  $('#peek').innerHTML = photo
+    ? `<img src="${photo}" alt=""><span class="sub" style="margin:0">This is what it should look like</span>`
+    : '';
+}
+const solved = () => tiles.every((t,i) => t === i);
+$('#puzzle').addEventListener('click', e => {
+  const el = e.target.closest('.pz');
+  if(!el || el.classList.contains('hole')) return;
+  const i = +el.dataset.i, hole = tiles.indexOf(8);
+  if(!neighbours(i).includes(hole)) return;
+  [tiles[i], tiles[hole]] = [tiles[hole], tiles[i]];
+  pzMoves++;
+  $('#pzStat').textContent = pzMoves + (pzMoves === 1 ? " move" : " moves");
+  drawPuzzle();
+  if(solved()) setTimeout(() => winGame('puzzle', `Back together in ${pzMoves} moves 💖`), 250);
+});
+
+/* ==========================================================
+   BOOT
+   ========================================================== */
+$('#letterTitle').textContent = CONFIG.letterTitle;
+$('#letterBody').textContent  = CONFIG.letterBody;
+$('#letterSign').textContent  = CONFIG.letterSign;
+$('#nextBtn').textContent     = CONFIG.finalStep.button;
+$('#nextTitle').textContent   = CONFIG.finalStep.title;
+$('#nextText').textContent    = CONFIG.finalStep.text;
+$('#nextBtn').addEventListener('click', () => {
+  $('#nextStep').classList.add('open');
+  $('#nextBtn').style.display = 'none';
+  $('#nextStep').scrollIntoView({ behavior:'smooth', block:'center' });
+});
+
+paintTokens(); paintCards();
+renderWord(); renderGuess(); renderQuiz(); renderLock(); renderPuzzle();
+</script>
+</body>
+</html>
